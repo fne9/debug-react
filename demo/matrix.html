@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>React Debug — Matrix de versões (17/18/19)</title>
+    <style>
+      body { font-family: system-ui, sans-serif; max-width: 720px; margin: 24px auto; padding: 0 16px; }
+      section { border: 1px solid #ddd; border-radius: 8px; padding: 12px 16px; margin: 16px 0; }
+      .card { display: flex; gap: 12px; align-items: center; margin: 6px 0; }
+      button { cursor: pointer; }
+      .hint { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 10px 14px; font-size: 14px; }
+      .versions a { display: inline-block; margin-right: 8px; padding: 4px 12px; border: 1px solid #cbd5e1; border-radius: 6px; text-decoration: none; color: #1e293b; }
+      .versions a.active { background: #2563eb; border-color: #2563eb; color: #fff; }
+      .err { background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 10px 14px; }
+    </style>
+  </head>
+  <body>
+    <p class="hint">
+      🧪 <strong>Matrix de versões do React</strong> — valida o <code>react-adapter</code> da
+      extensão contra React <b>17</b> e <b>18</b> (UMD de desenvolvimento via CDN, requer
+      internet). O React <b>19</b> é coberto pela <a href="/">demo principal</a> (bundle local).
+      Confira no rodapé do painel a versão detectada e, no Perfilador, os renders com razão.
+    </p>
+    <nav class="versions" id="versions"></nav>
+    <div id="status"></div>
+    <div id="root"></div>
+
+    <script>      const VERSIONS = {
+        17: "17.0.2",
+        18: "18.3.1",
+      };
+      const major = new URLSearchParams(location.search).get("v") === "17" ? 17 : 18;
+      const full = VERSIONS[major];
+
+      const nav = document.getElementById("versions");
+      nav.innerHTML =
+        Object.keys(VERSIONS)
+          .map(
+            (m) =>
+              `<a href="matrix.html?v=${m}" class="${m == major ? "active" : ""}">React ${m}</a>`,
+          )
+          .join("") + `<a href="/">React 19 (demo principal)</a>`;
+
+      function load(src) {
+        return new Promise((resolve, reject) => {
+          const s = document.createElement("script");
+          s.src = src;
+          s.onload = resolve;
+          s.onerror = () => reject(new Error(`falha ao carregar ${src}`));
+          document.head.appendChild(s);
+        });
+      }
+
+      Promise.all([
+        load(`https://unpkg.com/react@${full}/umd/react.development.js`),
+        load(`https://unpkg.com/react-dom@${full}/umd/react-dom.development.js`),
+      ])
+        .then(startApp)
+        .catch((e) => {
+          document.getElementById("status").innerHTML =
+            `<p class="err">⚠ ${e.message}. A matrix carrega o React de um CDN (unpkg) — ` +
+            `verifique a conexão com a internet e recarregue.</p>`;
+        });
+
+      function startApp() {
+        const { createElement: h, useState, useEffect, createContext, useContext } = React;
+
+        function ProductCard({ product, onBuy, style }) {
+          return h(
+            "div",
+            { className: "card", style },
+            h("strong", null, product.name),
+            ` — R$ ${product.price} `,
+            h("button", { onClick: onBuy }, "Comprar"),
+          );
+        }
+
+        function LeakyClock() {
+          const [now, setNow] = useState(() => new Date().toLocaleTimeString());
+          useEffect(() => {
+            setInterval(() => setNow(new Date().toLocaleTimeString()), 1000);
+          }, []);
+          return h("p", null, `Relógio (efeito sem cleanup): ${now}`);
+        }
+
+        function NoDepsEffect({ count }) {
+          useEffect(() => {
+            document.title = `Matrix React ${major} (${count})`;
+          });
+          return h("p", null, `Efeito sem deps — count: ${count}`);
+        }
+
+        function TodoList({ items }) {
+          return h(
+            "ul",
+            null,
+            items.map((item, index) => h("li", { key: index }, item)),
+          );
+        }
+
+        const ThemeContext = createContext({ mode: "claro" });
+        ThemeContext.displayName = "ThemeContext";
+        function ThemedBadge() {
+          const theme = useContext(ThemeContext);
+          return h(
+            "span",
+            { style: { padding: "2px 8px", border: "1px solid #ccc", borderRadius: 8 } },
+            `tema: ${theme.mode}`,
+          );
+        }
+
+        const PRODUCTS = [
+          { id: 1, name: "Teclado", price: 199 },
+          { id: 2, name: "Mouse", price: 99 },
+        ];
+
+        function App() {
+          const [count, setCount] = useState(0);
+          const [todos, setTodos] = useState(["Estudar Fiber", "Testar 17/18", "Publicar"]);
+          return h(
+            "div",
+            null,
+            h("h1", null, `React Debug — Matrix (React ${React.version})`),
+            h(
+              "section",
+              null,
+              h("h2", null, "Contador (re-renders em cascata)"),
+              h(
+                ThemeContext.Provider,
+                { value: { mode: "claro" } },
+                h(ThemedBadge),
+              ),
+              " ",
+              h("button", { onClick: () => setCount((c) => c + 1) }, `count = ${count}`),
+              PRODUCTS.map((p) =>
+                h(ProductCard, {
+                  key: p.id,
+                  product: p,
+                  onBuy: () => console.log("comprar", p.id),
+                  style: { padding: 8 },
+                }),
+              ),
+            ),
+            h(
+              "section",
+              null,
+              h("h2", null, "Efeitos"),
+              h(LeakyClock),
+              h(NoDepsEffect, { count }),
+            ),
+            h(
+              "section",
+              null,
+              h("h2", null, "Lista com key=index"),
+              h("button", { onClick: () => setTodos((t) => [...t].reverse()) }, "Inverter ordem"),
+              h(TodoList, { items: todos }),
+            ),
+          );
+        }
+
+        const rootEl = document.getElementById("root");
+        if (major >= 18) {
+          ReactDOM.createRoot(rootEl).render(h(App));
+        } else {
+          ReactDOM.render(h(App), rootEl);
+        }
+      }
+</script>
+  </body>
+</html>
