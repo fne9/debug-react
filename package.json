@@ -1,0 +1,25 @@
+{
+  "name": "react-debug",
+  "version": "0.1.0",
+  "description": "Ferramenta avançada de depuração e otimização de desempenho para aplicações React.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "watch": "node build.mjs --watch",
+    "demo": "node demo/server.mjs",
+    "bridge": "node bridge/react-debug-bridge.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.2.2",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "esbuild": "^0.28.1",
+    "typescript": "^7.0.2"
+  },
+  "dependencies": {
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
+  }
+}
