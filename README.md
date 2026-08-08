@@ -195,13 +195,12 @@ Notas técnicas:
 ## Documentos do projeto
 
 - [`SPEC.md`](SPEC.md) — especificação do produto e arquitetura
-- [`PLANNING.md`](PLANNING.md) — planejamento por etapas com estado real de cada item
 - [`bridge/MCP.md`](bridge/MCP.md) — como conectar Claude Code/Cursor à ponte MCP
 - [`store/descricao-web-store.md`](store/descricao-web-store.md) — material e passo a passo de publicação
 
 ## Status
 
-MVP + v1.1 + v1.2 implementados (Etapas 0–9 do `PLANNING.md`). Pendências para o
+MVP + v1.1 + v1.2 implementados Pendências para o
 lançamento: verificação manual final na demo e publicação na Chrome Web Store.
 Fora do escopo atual (v2.0): modo CI headless (`react-debug-ci` via Playwright).
 
